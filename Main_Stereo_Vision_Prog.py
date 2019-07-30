@@ -6,7 +6,7 @@
 ###################################
 ##### Authors:                #####
 ##### Stephane Vujasinovic    #####
-##### Frederic Uhrweiller     ##### 
+##### Frederic Uhrweiller     #####
 #####                         #####
 ##### Creation: 2017          #####
 ###################################
@@ -37,7 +37,7 @@ def coords_mouse_disp(event,x,y,flags,param):
         Distance= -593.97*average**(3) + 1506.8*average**(2) - 1373.1*average + 522.06
         Distance= np.around(Distance*0.01,decimals=2)
         print('Distance: '+ str(Distance)+' m')
-        
+
 # This section has to be uncommented if you want to take mesurements and store them in the excel
 ##        ws.append([counterdist, average])
 ##        print('Measure at '+str(counterdist)+' cm, the dispasrity is ' + str(average))
@@ -51,7 +51,7 @@ def coords_mouse_disp(event,x,y,flags,param):
 
 # Mouseclick callback
 wb=Workbook()
-ws=wb.active  
+ws=wb.active
 
 #*************************************************
 #***** Parameters for Distortion Calibration *****
@@ -73,14 +73,25 @@ imgpointsL= []
 # Start calibration from the camera
 print('Starting calibration for the 2 cameras... ')
 # Call all saved images
-for i in range(0,67):   # Put the amount of pictures you have taken for the calibration inbetween range(0,?) wenn starting from the image number 0
+for i in range(0,18):   # Put the amount of pictures you have taken for the calibration inbetween range(0,?) wenn starting from the image number 0
     t= str(i)
-    ChessImaR= cv2.imread('chessboard-R'+t+'.png',0)    # Right side
-    ChessImaL= cv2.imread('chessboard-L'+t+'.png',0)    # Left side
-    retR, cornersR = cv2.findChessboardCorners(ChessImaR,
-                                               (9,6),None)  # Define the number of chees corners we are looking for
-    retL, cornersL = cv2.findChessboardCorners(ChessImaL,
-                                               (9,6),None)  # Left side
+    ImaR= cv2.imread('chessboard-R'+t+'.png',0)    # Right side
+    ImaL= cv2.imread('chessboard-L'+t+'.png',0)    # Left side
+
+    '''
+    IMG = cv2.imread('chessboard-R1.png',0)
+    cv2.imshow('IMG', IMG)
+
+
+    cv2.imshow('ImaR',ImaR)
+    cv2.imshow('ImaL',ImaL)
+    '''
+
+    ChessImaR = cv2.GaussianBlur(ImaR, (5,5),0)
+    ChessImaL = cv2.GaussianBlur(ImaL, (5,5),0)
+
+    retR, cornersR = cv2.findChessboardCorners(ChessImaR,(9,6),None)  # Define the number of chees corners we are looking for
+    retL, cornersL = cv2.findChessboardCorners(ChessImaL,(9,6),None)  # Left side
     if (True == retR) & (True == retL):
         objpoints.append(objp)
         cv2.cornerSubPix(ChessImaR,cornersR,(11,11),(-1,-1),criteria)
@@ -169,7 +180,7 @@ stereoR=cv2.ximgproc.createRightMatcher(stereo) # Create another stereo for righ
 lmbda = 80000
 sigma = 1.8
 visual_multiplier = 1.0
- 
+
 wls_filter = cv2.ximgproc.createDisparityWLSFilter(matcher_left=stereo)
 wls_filter.setLambda(lmbda)
 wls_filter.setSigmaColor(sigma)
@@ -198,8 +209,8 @@ while True:
 ##
 ##    for line in range(0, int(frameR.shape[0]/20)): # Draw the Lines on the images Then numer of line is defines by the image Size/20
 ##        frameL[line*20,:]= (0,255,0)
-##        frameR[line*20,:]= (0,255,0)    
-        
+##        frameR[line*20,:]= (0,255,0)
+
     # Show the Undistorted images
     #cv2.imshow('Both Images', np.hstack([Left_nice, Right_nice]))
     #cv2.imshow('Normal', np.hstack([frameL, frameR]))
@@ -226,13 +237,13 @@ while True:
 ##    dispR= cv2.resize(disp,None,fx=0.7, fy=0.7, interpolation = cv2.INTER_AREA)
 
     # Filtering the Results with a closing filter
-    closing= cv2.morphologyEx(disp,cv2.MORPH_CLOSE, kernel) # Apply an morphological filter for closing little "black" holes in the picture(Remove noise) 
+    closing= cv2.morphologyEx(disp,cv2.MORPH_CLOSE, kernel) # Apply an morphological filter for closing little "black" holes in the picture(Remove noise)
 
     # Colors map
     dispc= (closing-closing.min())*255
     dispC= dispc.astype(np.uint8)                                   # Convert the type of the matrix from float32 to uint8, this way you can show the results with the function cv2.imshow()
     disp_Color= cv2.applyColorMap(dispC,cv2.COLORMAP_OCEAN)         # Change the Color of the Picture into an Ocean Color_Map
-    filt_Color= cv2.applyColorMap(filteredImg,cv2.COLORMAP_OCEAN) 
+    filt_Color= cv2.applyColorMap(filteredImg,cv2.COLORMAP_OCEAN)
 
     # Show the result for the Depth_image
     #cv2.imshow('Disparity', disp)
@@ -242,11 +253,11 @@ while True:
 
     # Mouse click
     cv2.setMouseCallback("Filtered Color Depth",coords_mouse_disp,filt_Color)
-    
+
     # End the Programme
     if cv2.waitKey(1) & 0xFF == ord(' '):
         break
-    
+
 # Save excel
 ##wb.save("data4.xlsx")
 
